@@ -1,11 +1,16 @@
-from fastapi import FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from scrape import scrape_blogs
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 import json
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 try:
     with open("cache.json", "r") as file:
@@ -22,17 +27,20 @@ app.add_middleware(
 
 
 @app.get("/blogs")
-def get_blogs():
+@limiter.limit("1/hour")
+def get_blogs(request: Request):
     return cache
 
 
 @app.get("/blogs/latest")
-def get_latest_blogs():
+@limiter.limit("1/day")
+def get_latest_blogs(request: Request):
     return cache[0] if cache else None
 
 
 @app.get("/blogs/search")
-def search_blogs(query: str):
+@limiter.limit("5/hour")
+def search_blogs(request: Request, query: str):
     results = []
     for blog in cache:
         if query.lower() in blog["title"].lower():
@@ -41,7 +49,8 @@ def search_blogs(query: str):
 
 
 @app.post("/blogs/cache")
-def cache_blogs():
+@limiter.limit("1/week")
+def cache_blogs(request: Request):
     global cache
     try:
         cache = scrape_blogs(
