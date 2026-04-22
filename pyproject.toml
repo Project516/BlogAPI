@@ -1,7 +1,7 @@
 [project]
 name = "blogapi"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "A simple API to fetch and search blogs from project516's blog."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
