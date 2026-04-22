@@ -3,14 +3,20 @@ from bs4 import BeautifulSoup
 
 
 def scrape_blogs(url):
-    response = requests.get(url, timeout=10)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    response = requests.get(url, timeout=10, headers=headers)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
     blogs = []
     for article in soup.find_all("article"):
         title = article.find("h2").get_text(strip=True)
-        link = article.find("a")["href"]
+        link = article.find("a")
+        if link is None:
+            continue
+        link = link["href"]
         summary = article.find("p").get_text(strip=True)
         date = article.find("time")["datetime"]
         blogs.append({"title": title, "link": link, "summary": summary, "date": date})
