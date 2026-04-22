@@ -16,9 +16,8 @@ def scrape_blogs(url):
         link = article.find("a")
         if link is None:
             continue
-        link = link["href"]
-        summary = article.find("p").get_text(strip=True)
+        link = "https://project516.dev/" + link["href"]
         date = article.find("time")["datetime"]
-        blogs.append({"title": title, "link": link, "summary": summary, "date": date})
+        blogs.append({"title": title, "link": link, "date": date})
 
     return blogs
