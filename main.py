@@ -18,7 +18,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 try:
-    with open("cache.json", "r") as file:
+    with open("/tmp/cache.json", "r") as file:
         cache = json.load(file)
 except FileNotFoundError:
     cache = []
@@ -32,19 +32,19 @@ app.add_middleware(
 
 
 @app.get("/blogs")
-@limiter.limit("1/hour")
+@limiter.limit("5/minute")
 def get_blogs(request: Request):
     return cache
 
 
 @app.get("/blogs/latest")
-@limiter.limit("1/day")
+@limiter.limit("5/minute")
 def get_latest_blogs(request: Request):
     return cache[0] if cache else None
 
-
+    
 @app.get("/blogs/search")
-@limiter.limit("5/hour")
+@limiter.limit("5/minute")
 def search_blogs(request: Request, query: str):
     results = []
     for blog in cache:
@@ -54,7 +54,7 @@ def search_blogs(request: Request, query: str):
 
 
 @app.post("/blogs/cache")
-@limiter.limit("1/week")
+@limiter.limit("1/minute")
 def cache_blogs(request: Request):
     global cache
     try:
@@ -67,7 +67,7 @@ def cache_blogs(request: Request):
             detail=f"Error occurred while scraping blogs: {str(e)}",
         )
 
-    with open("cache.json", "w") as file:
+    with open("/tmp/cache.json", "w") as file:
         json.dump(cache, file)
     return {"message": "Blogs cached successfully"}
 
