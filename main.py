@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from scrape import scrape_blogs
+from fastapi import FastAPI, HTTPException
 import json
 
 app = FastAPI()
@@ -12,7 +13,12 @@ try:
 except FileNotFoundError:
     cache = []
 
-latest = cache[0] if cache else None
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/blogs")
@@ -22,7 +28,7 @@ def get_blogs():
 
 @app.get("/blogs/latest")
 def get_latest_blogs():
-    return latest
+    return cache[0] if cache else None
 
 
 @app.get("/blogs/search")
@@ -36,19 +42,21 @@ def search_blogs(query: str):
 
 @app.post("/blogs/cache")
 def cache_blogs():
-    cache = scrape_blogs(
-        "https://raw.githubusercontent.com/Project516/project516.github.io/refs/heads/master/blog.html"
-    )
+    global cache
+    try:
+        cache = scrape_blogs(
+            "https://raw.githubusercontent.com/Project516/project516.github.io/refs/heads/master/blog.html"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error occurred while scraping blogs: {str(e)}",
+        )
+
     with open("cache.json", "w") as file:
         json.dump(cache, file)
     return {"message": "Blogs cached successfully"}
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-uvicorn.run(app)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
