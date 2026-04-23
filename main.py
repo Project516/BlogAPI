@@ -42,7 +42,7 @@ def get_blogs(request: Request):
 def get_latest_blogs(request: Request):
     return cache[0] if cache else None
 
-    
+
 @app.get("/blogs/search")
 @limiter.limit("5/minute")
 def search_blogs(request: Request, query: str):
