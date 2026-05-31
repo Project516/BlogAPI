@@ -12,7 +12,7 @@ def scrape_blogs(url):
 
     blogs = []
     for article in soup.find_all("article"):
-        title = article.find("h2").get_text(strip=True)
+        title = article.find("h3").get_text(strip=True)
         link = article.find("a")
         if link is None:
             continue
