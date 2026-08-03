@@ -20,25 +20,21 @@ def scrape_blogs(url):
         anchor = article.find("a")
         time = article.find("time")
 
+        title = heading.get_text(strip=True) if heading else ""
+        href = anchor.get("href", "") if anchor else ""
+        date = time.get("datetime", "") if time else ""
+
         # A blog post needs at least a title, a link, and a date. Skip any
         # <article> that is missing one of these instead of letting a single
         # malformed entry abort the whole scrape.
-        if heading is None or anchor is None or time is None:
-            continue
-
-        href = anchor.get("href")
-        if href is None:
-            continue
-
-        datetime = time.get("datetime")
-        if datetime is None:
+        if not title or not href or not date:
             continue
 
         blogs.append(
             {
-                "title": heading.get_text(strip=True),
+                "title": title,
                 "link": urljoin(BLOG_BASE_URL, href),
-                "date": datetime,
+                "date": date,
             }
         )
 
