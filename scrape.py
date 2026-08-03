@@ -7,6 +7,11 @@ BLOG_BASE_URL = "https://project516.dev/"
 
 
 def scrape_blogs(url):
+    """Fetch the blog page and parse well-formed article entries.
+
+    Articles missing a title, link, or date are skipped rather than aborting
+    the scrape. Returns a list of dicts with ``title``, ``link``, and ``date``.
+    """
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
