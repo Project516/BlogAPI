@@ -21,8 +21,8 @@ def scrape_blogs(url):
         time = article.find("time")
 
         title = heading.get_text(strip=True) if heading else ""
-        href = anchor.get("href", "") if anchor else ""
-        date = time.get("datetime", "") if time else ""
+        href = anchor.get("href", "").strip() if anchor else ""
+        date = time.get("datetime", "").strip() if time else ""
 
         # A blog post needs at least a title, a link, and a date. Skip any
         # <article> that is missing one of these instead of letting a single
