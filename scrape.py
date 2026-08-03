@@ -1,5 +1,9 @@
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
+
+BLOG_BASE_URL = "https://project516.dev/"
 
 
 def scrape_blogs(url):
@@ -12,12 +16,30 @@ def scrape_blogs(url):
 
     blogs = []
     for article in soup.find_all("article"):
-        title = article.find("h3").get_text(strip=True)
-        link = article.find("a")
-        if link is None:
+        heading = article.find("h3")
+        anchor = article.find("a")
+        time = article.find("time")
+
+        # A blog post needs at least a title, a link, and a date. Skip any
+        # <article> that is missing one of these instead of letting a single
+        # malformed entry abort the whole scrape.
+        if heading is None or anchor is None or time is None:
             continue
-        link = "https://project516.dev/" + link["href"]
-        date = article.find("time")["datetime"]
-        blogs.append({"title": title, "link": link, "date": date})
+
+        href = anchor.get("href")
+        if href is None:
+            continue
+
+        datetime = time.get("datetime")
+        if datetime is None:
+            continue
+
+        blogs.append(
+            {
+                "title": heading.get_text(strip=True),
+                "link": urljoin(BLOG_BASE_URL, href),
+                "date": datetime,
+            }
+        )
 
     return blogs
