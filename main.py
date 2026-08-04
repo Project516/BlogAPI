@@ -350,6 +350,8 @@ def read_root():
             <div class="hero">
                 <h1>Blog API</h1>
                 <div class="hero-code">
+                </div>
+            </div>
         </main>
     </body>
     </html>
