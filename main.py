@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse
 from scrape import scrape_blogs
 from fastapi import FastAPI, HTTPException, Request
 import json
+import os
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -17,8 +18,10 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+CACHE_FILE = os.environ.get("BLOGAPI_CACHE_FILE", "/tmp/cache.json")
+
 try:
-    with open("/tmp/cache.json", "r") as file:
+    with open(CACHE_FILE, "r") as file:
         cache = json.load(file)
 except FileNotFoundError:
     cache = []
@@ -67,7 +70,7 @@ def cache_blogs(request: Request):
             detail=f"Error occurred while scraping blogs: {str(e)}",
         )
 
-    with open("/tmp/cache.json", "w") as file:
+    with open(CACHE_FILE, "w") as file:
         json.dump(cache, file)
     return {"message": "Blogs cached successfully"}
 

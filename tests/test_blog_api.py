@@ -7,6 +7,8 @@ endpoints are exercised against known, fixed data.
 
 from unittest.mock import patch
 
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -75,11 +77,13 @@ def client():
     the 5/minute limit almost immediately. Pointing the limiter at a storage
     backend that always reports a clean slate keeps the tests deterministic.
     """
-    # Make every limiter check believe no limits have been hit yet.
+    original_enabled = main.limiter.enabled
     main.limiter.enabled = False
-    with TestClient(main.app) as test_client:
-        yield test_client
-    main.limiter.enabled = True
+    try:
+        with TestClient(main.app) as test_client:
+            yield test_client
+    finally:
+        main.limiter.enabled = original_enabled
 
 
 @pytest.fixture(autouse=True)
@@ -206,7 +210,7 @@ def test_cache_endpoint_refreshes_and_persists(tmp_path, client):
     ]
     with (
         patch("main.scrape_blogs", return_value=fake_blogs) as mock_scrape,
-        patch("main.open", create=True) as mock_open,
+        patch("main.CACHE_FILE", str(cache_file)),
     ):
         response = client.post("/blogs/cache")
 
@@ -214,6 +218,10 @@ def test_cache_endpoint_refreshes_and_persists(tmp_path, client):
     assert response.json() == {"message": "Blogs cached successfully"}
     mock_scrape.assert_called_once()
     assert main.cache == fake_blogs
+    # Verify the cache file was actually written with the serialized payload.
+    assert cache_file.exists()
+    with open(cache_file, "r") as f:
+        assert json.load(f) == fake_blogs
 
 
 def test_cache_endpoint_returns_500_on_scrape_failure(client):
