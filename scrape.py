@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 BLOG_BASE_URL = "https://project516.dev/"
 
 
-def scrape_blogs(url):
+def scrape_blogs(url: str) -> list[dict[str, str]]:
     """Fetch the blog page and parse well-formed article entries.
 
     Articles missing a title, link, or date are skipped rather than aborting

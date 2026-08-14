@@ -40,19 +40,19 @@ app.add_middleware(
 
 @app.get("/blogs")
 @limiter.limit("5/minute")
-def get_blogs(request: Request):
+def get_blogs(request: Request) -> list[dict[str, str]]:
     return cache
 
 
 @app.get("/blogs/latest")
 @limiter.limit("5/minute")
-def get_latest_blogs(request: Request):
+def get_latest_blogs(request: Request) -> dict[str, str] | None:
     return cache[0] if cache else None
 
 
 @app.get("/blogs/search")
 @limiter.limit("5/minute")
-def search_blogs(request: Request, query: str):
+def search_blogs(request: Request, query: str) -> list[dict[str, str]] | dict[str, str]:
     results = []
     for blog in cache:
         if query.lower() in blog["title"].lower():
@@ -62,7 +62,7 @@ def search_blogs(request: Request, query: str):
 
 @app.post("/blogs/cache")
 @limiter.limit("1/minute")
-def cache_blogs(request: Request):
+def cache_blogs(request: Request) -> dict[str, str]:
     global cache
     try:
         cache = scrape_blogs(
