@@ -4,6 +4,8 @@ from fastapi.responses import HTMLResponse
 from scrape import scrape_blogs
 from fastapi import FastAPI, HTTPException, Request
 import json
+import os
+import tempfile
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -17,8 +19,13 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+_DEFAULT_CACHE_DIR = os.path.join(os.path.expanduser("~"), ".blogapi")
+CACHE_FILE = os.environ.get(
+    "BLOGAPI_CACHE_FILE", os.path.join(_DEFAULT_CACHE_DIR, "cache.json")
+)
+
 try:
-    with open("/tmp/cache.json", "r") as file:
+    with open(CACHE_FILE) as file:
         cache = json.load(file)
 except FileNotFoundError:
     cache = []
@@ -67,8 +74,18 @@ def cache_blogs(request: Request):
             detail=f"Error occurred while scraping blogs: {str(e)}",
         )
 
-    with open("/tmp/cache.json", "w") as file:
-        json.dump(cache, file)
+    # Atomic write: write to a temp file in the same directory, then rename.
+    # This prevents symlink-following overwrites and partial reads.
+    cache_dir = os.path.dirname(CACHE_FILE) or "."
+    os.makedirs(cache_dir, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=cache_dir, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as file:
+            json.dump(cache, file)
+        os.replace(tmp_path, CACHE_FILE)
+    except BaseException:
+        os.unlink(tmp_path)
+        raise
     return {"message": "Blogs cached successfully"}
 
 
