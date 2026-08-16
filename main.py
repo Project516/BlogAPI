@@ -9,7 +9,9 @@ import tempfile
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import logging
 
+logger = logging.getLogger("blogapi")
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
     title="Blog API",
@@ -68,10 +70,11 @@ def cache_blogs(request: Request) -> dict[str, str]:
         cache = scrape_blogs(
             "https://raw.githubusercontent.com/Project516/project516.github.io/refs/heads/master/blog.html"
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("Failed to scrape blogs")
         raise HTTPException(
             status_code=500,
-            detail=f"Error occurred while scraping blogs: {str(e)}",
+            detail="Failed to refresh blog cache",
         )
 
     # Atomic write: write to a temp file in the same directory, then rename.
