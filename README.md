@@ -16,7 +16,7 @@ Simple API for my [blog website](https://project516.dev/blog)!
 
 ### POST:
 
-`POST /blogs/cache` - updates the blog cache.
+`POST /blogs/cache` - updates the blog cache. The cache also populates itself once at startup when it loaded empty, so fresh deploys serve data without a manual refresh.
 
 ### Docs:
 
