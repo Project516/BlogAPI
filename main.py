@@ -25,11 +25,19 @@ CACHE_FILE = os.environ.get(
     "BLOGAPI_CACHE_FILE", os.path.join(_DEFAULT_CACHE_DIR, "cache.json")
 )
 
-try:
-    with open(CACHE_FILE) as file:
-        cache = json.load(file)
-except (FileNotFoundError, json.JSONDecodeError):
-    cache = []
+
+def _load_cache() -> list[dict[str, str]]:
+    try:
+        with open(CACHE_FILE) as file:
+            loaded = json.load(file)
+        # Valid JSON can still be the wrong shape; treat anything that is not
+        # a list of records as an empty cache.
+        return loaded if isinstance(loaded, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+cache = _load_cache()
 
 
 def persist_cache(blogs: list[dict[str, str]]) -> None:

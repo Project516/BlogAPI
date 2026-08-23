@@ -219,6 +219,15 @@ def test_search_blogs_matches_partial_title(client):
     assert len(response.json()) == 2
 
 
+def test_load_cache_rejects_valid_json_that_is_not_a_list(tmp_path):
+    """A truthy dict in the cache file must not skip the startup refresh or
+    break cache[0]; it is treated as an empty cache."""
+    bad = tmp_path / "cache.json"
+    bad.write_text('{"invalid": true}')
+    with patch("main.CACHE_FILE", str(bad)):
+        assert main._load_cache() == []
+
+
 def test_refresh_cache_scrapes_and_persists(tmp_path):
     """refresh_cache scrapes, writes the payload to CACHE_FILE, and returns it."""
     cache_file = tmp_path / "cache.json"
