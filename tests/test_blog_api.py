@@ -313,4 +313,6 @@ def test_root_returns_html_landing_page(client):
     body = response.text
     # A few markers from the landing page, confirming it rendered at all.
     assert "<title>Blog API</title>" in body
+    assert '<meta name="description" content="' in body
+    assert '<link rel="canonical" href="https://blogapi.project516.dev/">' in body
     assert "/docs" in body

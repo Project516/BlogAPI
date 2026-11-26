@@ -149,6 +149,8 @@ def read_root():
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Blog API</title>
+        <meta name="description" content="A simple JSON API to list, fetch and search the posts of the project516 blog.">
+        <link rel="canonical" href="https://blogapi.project516.dev/">
         <style>
             * {
                 margin: 0;
